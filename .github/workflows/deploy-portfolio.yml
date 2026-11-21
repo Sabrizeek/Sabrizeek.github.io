@@ -1,0 +1,65 @@
+name: Publish BA Portfolio Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'BA_Portfolio_Website_Publish*.zip'
+      - '.github/workflows/deploy-portfolio.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract uploaded portfolio ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          files = sorted(Path('.').glob('BA_Portfolio_Website_Publish*.zip'))
+          if not files:
+              raise SystemExit('Upload BA_Portfolio_Website_Publish(1).zip to repository root first.')
+          zip_file = files[-1]
+          target = Path('_site')
+          target.mkdir(exist_ok=True)
+          with ZipFile(zip_file) as archive:
+              for item in archive.infolist():
+                  resolved = (target / item.filename).resolve()
+                  if not resolved.is_relative_to(target.resolve()):
+                      raise SystemExit(f'Unsafe ZIP entry: {item.filename}')
+              archive.extractall(target)
+          if not (target / 'index.html').is_file():
+              raise SystemExit('Portfolio ZIP must contain index.html at its root.')
+          (target / '.nojekyll').touch()
+          print(f'Extracted {zip_file} into {target}')
+          PY
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
