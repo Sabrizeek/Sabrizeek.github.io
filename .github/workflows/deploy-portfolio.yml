@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -51,6 +51,19 @@ jobs:
           (target / '.nojekyll').touch()
           print(f'Extracted {zip_file} into {target}')
           PY
+
+      - name: Publish website files to repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp -a _site/. ./
+          git add -- index.html assets documents projects README_DEPLOY.md .nojekyll
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" \
+                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+                commit -m "Publish extracted portfolio files for GitHub Pages"
+            git push origin HEAD:main
+          fi
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
