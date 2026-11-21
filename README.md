@@ -1,16 +1,30 @@
 # Sabri Mazahim — Business Analyst Portfolio
 
-This repository hosts the portfolio site at **https://sabrizeek.github.io/**.
+**Live website:** https://sabrizeek.github.io/
 
-## Publish the supplied portfolio ZIP
+A professional portfolio showcasing business analysis documentation, process improvement, academic system projects, and practical operations experience.
 
-1. Upload the **original ZIP file** `BA_Portfolio_Website_Publish(1).zip` to the **root of the `main` branch** using [GitHub's upload page](https://github.com/Sabrizeek/Sabrizeek.github.io/upload/main). Commit the upload. You do **not** need to unzip the archive.
-2. In [Settings → Pages](https://github.com/Sabrizeek/Sabrizeek.github.io/settings/pages), set **Build and deployment → Source** to **GitHub Actions**.
-3. The workflow `.github/workflows/deploy-portfolio.yml` extracts the ZIP and publishes the site. Check the [Actions tab](https://github.com/Sabrizeek/Sabrizeek.github.io/actions) for the workflow result.
-4. Open https://sabrizeek.github.io/ and test the CV, case-study PDFs, and project pages.
+## Featured business analysis case studies
 
-The upload is required because ChatGPT's GitHub connector can create text files but cannot directly transfer the chat's binary ZIP/PDF/image attachments into this repository.
+- **Inventory Management & Process Improvement:** BRD, SRS, workflow diagrams, user stories, acceptance criteria, traceability, and UAT scenarios.
+- **CRM & Customer Service Optimisation:** Requirements and process documentation for improving enquiry handling, ownership, and follow-up visibility.
 
-### Package contents
+These are independent, simulated business scenarios. Their documentation demonstrates business analysis methods rather than claiming implementation for an external client.
 
-The supplied ZIP includes the main HTML page, eight project pages, styling and scripting, workflow diagrams, three PDF documents, and editable Business Analysis documents.
+## Other experience
+
+- Academic system case studies: Internship Management System, ConnectVault Workflow Improvement, and Lecturer Evaluation System.
+- Construction operations and cost documentation experience.
+- Supporting technical projects: Resume Analyser and Surf Ceylon.
+
+## Website structure
+
+- `index.html` — Portfolio homepage
+- `projects/` — Detailed case-study pages
+- `documents/` — Business analysis deliverables and downloadable case-study PDFs
+- `assets/` — Styles, scripts, diagrams, and CV
+
+The website is built with HTML, CSS, and JavaScript and hosted using GitHub Pages.
+
+**Portfolio:** https://sabrizeek.github.io/  
+**LinkedIn:** https://www.linkedin.com/in/sabri-mazahim-a2a8991a3
