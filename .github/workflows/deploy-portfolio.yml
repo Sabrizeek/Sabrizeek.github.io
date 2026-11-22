@@ -1,21 +1,18 @@
-name: Publish BA Portfolio Website
+name: Deploy Business Analyst Portfolio
 
 on:
   push:
     branches: [main]
-    paths:
-      - 'BA_Portfolio_Website_Publish*.zip'
-      - '.github/workflows/deploy-portfolio.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
 concurrency:
   group: github-pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
@@ -24,46 +21,43 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout repository
+      - name: Checkout latest website files
         uses: actions/checkout@v4
 
-      - name: Extract uploaded portfolio ZIP
+      - name: Validate pages and local links
         shell: bash
         run: |
-          set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          from zipfile import ZipFile
-          files = sorted(Path('.').glob('BA_Portfolio_Website_Publish*.zip'))
-          if not files:
-              raise SystemExit('Upload BA_Portfolio_Website_Publish(1).zip to repository root first.')
-          zip_file = files[-1]
-          target = Path('_site')
-          target.mkdir(exist_ok=True)
-          with ZipFile(zip_file) as archive:
-              for item in archive.infolist():
-                  resolved = (target / item.filename).resolve()
-                  if not resolved.is_relative_to(target.resolve()):
-                      raise SystemExit(f'Unsafe ZIP entry: {item.filename}')
-              archive.extractall(target)
-          if not (target / 'index.html').is_file():
-              raise SystemExit('Portfolio ZIP must contain index.html at its root.')
-          (target / '.nojekyll').touch()
-          print(f'Extracted {zip_file} into {target}')
+          from urllib.parse import urlsplit, unquote
+          import re
+          root = Path.cwd().resolve()
+          pages = [root / "index.html", *sorted((root / "projects").glob("*.html"))]
+          assert all(page.is_file() for page in pages), "Missing website HTML file"
+          assert (root / "assets" / "Sabri_Mazahim_Business_Analyst_CV.pdf").is_file(), "Missing current CV PDF"
+          assert 'id="experience"' in pages[0].read_text(encoding="utf-8"), "Missing experience anchor"
+          missing = []
+          for page in pages:
+              html = page.read_text(encoding="utf-8")
+              for link in re.findall(r'(?:href|src)\s*=\s*["\']([^"\']+)["\']', html):
+                  parsed = urlsplit(link)
+                  if parsed.scheme or parsed.netloc or not parsed.path:
+                      continue
+                  destination = (page.parent / unquote(parsed.path)).resolve()
+                  if not destination.is_relative_to(root) or not destination.is_file():
+                      missing.append((str(page.relative_to(root)), link))
+          if missing:
+              raise SystemExit(f"Missing local references: {missing}")
+          print(f"Checked {len(pages)} pages; all local links resolve.")
           PY
 
-      - name: Publish website files to repository root
+      - name: Assemble site from current repository content
         shell: bash
         run: |
-          set -euo pipefail
-          cp -a _site/. ./
-          git add -- index.html assets documents projects README_DEPLOY.md .nojekyll
-          if ! git diff --cached --quiet; then
-            git -c user.name="github-actions[bot]" \
-                -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
-                commit -m "Publish extracted portfolio files for GitHub Pages"
-            git push origin HEAD:main
-          fi
+          mkdir -p _site
+          cp index.html _site/
+          cp -a assets documents projects _site/
+          touch _site/.nojekyll
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
